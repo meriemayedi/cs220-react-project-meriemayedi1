@@ -1,7 +1,8 @@
 import * as React from "react";
 
-const list = [
-  {
+const App = () => {
+  const stories = [
+    {
     title: "React",
     url: "https://reactjs.org/",
     author: "Jordan Walke",
@@ -17,44 +18,52 @@ const list = [
     points: 5,
     objectID: 1,
   },
-];
+  ];
 
-const Search = () => {
-  const handleChange = (event) => {
-    console.log(event);
-    console.log(event.target.value);
+  const [searchTerm, setSearchTerm] = React.useState('');
+
+  const handleSearch = (event) => {
+    setSearchTerm(event.target.value);
   };
+
+  const searchedStories = stories.filter((story) =>
+    story.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div>
-      <label htmlFor="search">Search: </label>
-      <input id="search" type="text" onChange={handleChange} />
+      <h1>My Hacker Stories</h1>
+      <Search onSearch={handleSearch} />
+      <hr />
+      <List list={searchedStories} />
     </div>
   );
 };
 
-const List = () => (
+const Search = ({ onSearch }) => (
+  <div>
+    <label htmlFor="search">Search: </label>
+    <input id="search" type="text" onChange={onSearch} />
+  </div>
+);
+
+const List = ({ list }) => (
   <ul>
     {list.map((item) => (
-      <li key={item.objectID}>
-        <span>
-          <a href={item.url}>{item.title}</a>
-        </span>
-        <span>{item.author}</span>
-        <span>{item.num_comments}</span>
-        <span>{item.points}</span>
-      </li>
+      <Item key={item.objectID} item={item} />
     ))}
   </ul>
 );
 
-const App = () => (
-  <div>
-    <h1>My Hacker Stories</h1>
-    <Search />
-    <hr />
-    <List />
-  </div>
+const Item = ({ item }) => (
+  <li>
+    <span>
+      <a href={item.url}>{item.title}</a>
+    </span>
+    <span>{item.author}</span>
+    <span>{item.num_comments}</span>
+    <span>{item.points}</span>
+  </li>
 );
 
 export default App;
