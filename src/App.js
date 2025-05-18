@@ -1,36 +1,45 @@
 import * as React from "react";
 
-const initialStories = [
-  {
-    title: "React",
-    url: "https://reactjs.org/",
-    author: "Jordan Walke",
-    num_comments: 3,
-    points: 4,
-    objectID: 0,
-  },
-  {
-    title: "Redux",
-    url: "https://redux.js.org/",
-    author: "Dan Abramov, Andrew Clark",
-    num_comments: 2,
-    points: 5,
-    objectID: 1,
-  },
-];
+const API_ENDPOINT = "https://hn.algolia.com/api/v1/search?query=";
 
 const App = () => {
-  const [stories, setStories] = React.useState(initialStories);
+  const [stories, setStories] = React.useState([]);
   const [searchTerm, setSearchTerm] = React.useState(
     localStorage.getItem('search') || 'React'
   );
+  const [url, setUrl] = React.useState(
+    `${API_ENDPOINT}${searchTerm}`
+  );
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [isError, setIsError] = React.useState(false);
 
   React.useEffect(() => {
     localStorage.setItem('search', searchTerm);
   }, [searchTerm]);
 
+  React.useEffect(() => {
+    if (!url) return;
+
+    setIsLoading(true);
+
+    fetch(url)
+      .then((response) => response.json())
+      .then((result) => {
+        setStories(result.hits);
+        setIsLoading(false);
+      })
+      .catch(() => {
+        setIsLoading(false);
+        setIsError(true);
+      });
+  }, [url]);
+
   const handleSearch = (event) => {
     setSearchTerm(event.target.value);
+  };
+
+  const handleSearchSubmit = () => {
+    setUrl(`${API_ENDPOINT}${searchTerm}`);
   };
 
   const handleRemoveStory = (item) => {
@@ -39,10 +48,6 @@ const App = () => {
     );
     setStories(newStories);
   };
-
-  const searchedStories = stories.filter((story) =>
-    story.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   return (
     <div>
@@ -54,8 +59,20 @@ const App = () => {
       >
         <strong>Search:</strong>
       </InputWithLabel>
+      <button
+        type="button"
+        disabled={!searchTerm}
+        onClick={handleSearchSubmit}
+      >
+        Submit
+      </button>
       <hr />
-      <List list={searchedStories} onRemoveItem={handleRemoveStory} />
+      {isError && <p>Something went wrong ...</p>}
+      {isLoading ? (
+        <p>Loading ...</p>
+      ) : (
+        <List list={stories} onRemoveItem={handleRemoveStory} />
+      )}
     </div>
   );
 };
